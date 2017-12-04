@@ -46,6 +46,7 @@ describe('VASTPlayer(container, config)', function() {
         };
 
         spyOn(VAST, 'fetch').and.callThrough();
+        spyOn(VAST, 'pojoFromXML').and.callThrough();
 
         VASTPlayer = proxyquire('../../lib/VASTPlayer', stubs);
     });
@@ -226,7 +227,7 @@ describe('VASTPlayer(container, config)', function() {
                             beforeEach(function() {
                                 value = {};
 
-                                player[property] = value;
+                            player[property] = value;
                             });
 
                             it('should set the value of the player', function() {
@@ -624,6 +625,80 @@ describe('VASTPlayer(container, config)', function() {
                             });
                         });
                     });
+                });
+            });
+            describe('loadXml(xml)', function() {
+                var xml;
+                var jsonVast;
+                var success, failure;
+                var resolve, reject;
+                var result;
+
+                beforeEach(function() {
+                    xml = '<VAST></VAST>';
+                    jsonVast = {
+                        version: '2.0',
+                        ads: [
+                            {
+                                type: 'inline',
+                                system: {
+                                    name: 'The System'
+                                },
+                                title: 'My Awesome Ad!',
+                                errors: ['http://tracking.com/error'],
+                                impressions: [
+                                    { uri: 'http://tracking.com/impression' }
+                                ],
+                                creatives: [
+                                    {
+                                        type: 'linear',
+                                        duration: 30,
+                                        parameters: 'foo=bar&bar=foo',
+                                        mediaFiles: [
+                                            { type: 'video/x-flv', width: 300, height: 200, uri: 'http://videos.com/video1.flv' },
+                                            { type: 'video/x-flv', width: 400, height: 300, uri: 'http://videos.com/video2.flv' },
+                                            { type: 'video/x-flv', width: 500, height: 400, uri: 'http://videos.com/video3.flv' },
+                                            { type: 'application/javascript', width: 500, height: 400, uri: 'http://videos.com/vpaid.js', apiFramework: 'VPAID' },
+                                            { type: 'video/mp4', width: 300, height: 200, uri: 'http://videos.com/video1.mp4' },
+                                            { type: 'video/mp4', width: 400, height: 300, uri: 'http://videos.com/video2.mp4' },
+                                            { type: 'video/mp4', width: 500, height: 400, uri: 'http://videos.com/video3.mp4' },
+                                            { type: 'application/x-shockwave-flash', width: 500, height: 400, uri: 'http://videos.com/vpaid.swf', apiFramework: 'VPAID' },
+                                            { type: 'video/webm', width: 300, height: 200, uri: 'http://videos.com/video1.webm' },
+                                            { type: 'video/webm', width: 400, height: 300, uri: 'http://videos.com/video2.webm' },
+                                            { type: 'video/webm', width: 500, height: 400, uri: 'http://videos.com/video3.webm' },
+                                            { type: 'video/3gp', width: 300, height: 200, uri: 'http://videos.com/video1.3gp' },
+                                            { type: 'video/3gp', width: 400, height: 300, uri: 'http://videos.com/video2.3gp' },
+                                            { type: 'video/3gp', width: 500, height: 400, uri: 'http://videos.com/video3.3gp' },
+                                        ],
+                                        videoClicks: {
+                                            clickThrough: ['http://www.my-site.com'],
+                                            clickTrackings: ['http://cinema6.com/pixels/click'],
+                                            customClicks: []
+                                        },
+                                        trackingEvents: [
+                                            { event: 'start', uri: 'http://cinema6.com/pixels/start' },
+                                            { event: 'midpoint', uri: 'http://cinema6.com/pixels/midpoint' }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    };
+                    success = jasmine.createSpy('success()');
+                    failure = jasmine.createSpy('failure()');
+                    spyOn(player, 'loadPlayer').and.returnValue(new LiePromise(function(/*resolve, reject*/) {
+                        resolve = arguments[0];
+                        reject = arguments[1];
+                    }));
+
+                    VAST.pojoFromXML.and.returnValue(jsonVast);
+
+                    result = player.loadXml(xml);
+                    result.then(success, failure);
+                });
+
+                it('should parse xml the VAST', function() {
+                    expect(VAST.pojoFromXML).toHaveBeenCalledWith(xml);
                 });
             });
 
