@@ -47,6 +47,7 @@ describe('VASTPlayer(container, config)', function() {
 
         spyOn(VAST, 'fetch').and.callThrough();
         spyOn(VAST, 'pojoFromXML').and.callThrough();
+        spyOn(VAST.prototype, 'resolveWrappers').and.callThrough();
 
         VASTPlayer = proxyquire('../../lib/VASTPlayer', stubs);
     });
@@ -692,6 +693,7 @@ describe('VASTPlayer(container, config)', function() {
                     }));
 
                     VAST.pojoFromXML.and.returnValue(jsonVast);
+                    VAST.prototype.resolveWrappers.and.returnValue(LiePromise.resolve(new VAST(jsonVast)));
 
                     result = player.loadXml(xml);
                     result.then(success, failure);
@@ -699,6 +701,7 @@ describe('VASTPlayer(container, config)', function() {
 
                 it('should parse xml the VAST', function() {
                     expect(VAST.pojoFromXML).toHaveBeenCalledWith(xml);
+                    expect(VAST.prototype.resolveWrappers).toHaveBeenCalledWith(10);
                 });
             });
 
